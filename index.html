@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>C Programming Lecture Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg-chrome: #0f172a;
+      --bg-sidebar: #111827;
+      --bg-stage: #e2e8f0;
+      --bg-card: #ffffff;
+      --border-dark: #1e293b;
+      --border-light: #cbd5e1;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dark: #0f172a;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-chrome);
+      color: var(--text-light);
+      overflow: hidden;
+    }
+
+    /* Layout Shell */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      transition: filter 0.15s ease;
+    }
+
+    .app-shell.blurred {
+      filter: blur(22px) brightness(0.45);
+      pointer-events: none;
+    }
+
+    /* Top Header */
+    .topbar {
+      height: 58px;
+      background: var(--bg-chrome);
+      border-bottom: 1px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-light);
+      border-radius: 8px;
+      padding: 7px 9px;
+      cursor: pointer;
+    }
+
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    /* Reader Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+
+    .ctrl-btn:hover:not(:disabled) {
+      background: #334155;
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .page-indicator {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 0 10px;
+      color: #e2e8f0;
+    }
+
+    .zoom-select {
+      background: #1e293b;
+      color: var(--text-light);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .protected-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37, 99, 235, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 999px;
+    }
+
+    /* Main Content Body */
+    .workspace {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 290px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-dark);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: #1e293b;
+      color: #fff;
+    }
+
+    .module-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .module-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .module-item:hover {
+      background: #1e293b;
+      color: #fff;
+    }
+
+    .module-item.active {
+      background: rgba(37, 99, 235, 0.18);
+      border-color: rgba(59, 130, 246, 0.5);
+      color: #fff;
+    }
+
+    .module-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      background: #1e293b;
+      color: #93c5fd;
+      padding: 3px 7px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .module-item.active .module-num {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .module-meta {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .module-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .module-pages {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* PDF Stage */
+    .stage {
+      flex: 1;
+      background: var(--bg-stage);
+      overflow-y: auto;
+      overflow-x: auto;
+      padding: 24px 16px 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+    }
+
+    .canvas-wrapper {
+      background: #ffffff;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      line-height: 0;
+    }
+
+    .canvas-wrapper canvas {
+      display: block;
+      pointer-events: none;
+    }
+
+    .page-tag {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      background: rgba(15, 23, 42, 0.65);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* Empty / Loading State */
+    .state-box {
+      margin: auto;
+      background: #ffffff;
+      color: var(--text-dark);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 32px 28px;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+
+    .state-box h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .state-box p {
+      margin: 0;
+      font-size: 13.5px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #cbd5e1;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Security Toast */
+    .security-toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-16px);
+      background: #991b1b;
+      color: #fff;
+      border: 1px solid #f87171;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 100;
+    }
+
+    .security-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Privacy Blur Overlay */
+    .privacy-shield {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.92);
+      color: #fff;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      z-index: 9999;
+    }
+
+    .privacy-shield.active {
+      display: flex;
+    }
+
+    .privacy-shield h2 {
+      margin: 12px 0 6px;
+      font-size: 20px;
+    }
+
+    .privacy-shield p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 14px;
+      max-width: 380px;
+    }
+
+    /* Print Lockdown */
+    .print-block-msg {
+      display: none;
+    }
+
+    @media print {
+      body * {
+        display: none !important;
+      }
+      .print-block-msg {
+        display: block !important;
+        color: #000 !important;
+        font-size: 22px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        padding: 80px 20px !important;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .menu-toggle {
+        display: inline-flex;
+      }
+      .sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        box-shadow: 12px 0 30px rgba(0, 0, 0, 0.45);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .protected-pill {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;">
+  <div class="print-block-msg">Printing and saving are disabled by the instructor.</div>
+
+  <div id="securityToast" class="security-toast">Protected Lecture: Copying, saving, and screenshots are disabled.</div>
+
+  <div id="privacyShield" class="privacy-shield">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <h2>Lecture Content Protected</h2>
+    <p>Click back inside this window to resume viewing your C programming notes.</p>
+  </div>
+
+  <div id="appShell" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <button id="menuToggle" class="menu-toggle" aria-label="Toggle Chapters">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="brand-badge">C</div>
+        <div style="min-width:0;">
+          <div id="courseTitle" class="brand-title">C Programming Language</div>
+          <span id="activeChapterSub" class="brand-sub">Protected Classroom Notes</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-group">
+          <button id="prevPageBtn" class="ctrl-btn" disabled title="Previous Page">Prev</button>
+          <span id="pageIndicator" class="page-indicator">0 / 0</span>
+          <button id="nextPageBtn" class="ctrl-btn" disabled title="Next Page">Next</button>
+        </div>
+
+        <select id="zoomSelect" class="zoom-select" aria-label="Zoom Level">
+          <option value="fit" selected>Fit Width</option>
+          <option value="0.85">85%</option>
+          <option value="1.0">100%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+        </select>
+
+        <div class="protected-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          View Only
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <span>Course Chapters</span>
+          <button id="refreshBtn" class="refresh-btn" title="Check for new notes">Refresh</button>
+        </div>
+        <div id="moduleList" class="module-list"></div>
+      </aside>
+
+      <main id="stage" class="stage">
+        <div class="state-box">
+          <div class="spinner"></div>
+          <h3>Loading Course Notes...</h3>
+          <p>Fetching your published C programming chapters.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const SCRAMBLE_KEY = 'C_LECTURE_VAULT_2026_KEY';
+
+    const state = {
+      manifest: null,
+      activeModule: null,
+      pdfDoc: null,
+      currentPage: 1,
+      totalPages: 0,
+      zoomMode: 'fit',
+      renderToken: 0
+    };
+
+    const els = {
+      appShell: document.getElementById('appShell'),
+      privacyShield: document.getElementById('privacyShield'),
+      securityToast: document.getElementById('securityToast'),
+      courseTitle: document.getElementById('courseTitle'),
+      activeChapterSub: document.getElementById('activeChapterSub'),
+      sidebar: document.getElementById('sidebar'),
+      menuToggle: document.getElementById('menuToggle'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      moduleList: document.getElementById('moduleList'),
+      stage: document.getElementById('stage'),
+      prevPageBtn: document.getElementById('prevPageBtn'),
+      nextPageBtn: document.getElementById('nextPageBtn'),
+      pageIndicator: document.getElementById('pageIndicator'),
+      zoomSelect: document.getElementById('zoomSelect')
+    };
+
+    let toastTimer = null;
+    function showSecurityToast(msg) {
+      if (msg) els.securityToast.textContent = msg;
+      els.securityToast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        els.securityToast.classList.remove('show');
+      }, 2400);
+    }
+
+    // Multi-Layer Anti-Inspect, Anti-Copy & Anti-Snipping Protection
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+      if (
+        e.key === 'F12' ||
+        e.key === 'PrintScreen' ||
+        (ctrlOrMeta && e.shiftKey && ['i', 'j', 'c', 's'].includes(key)) ||
+        (ctrlOrMeta && ['u', 's', 'p', 'c', 'a', 'x'].includes(key))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.key === 'PrintScreen') {
+          activatePrivacyShield();
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText('').catch(() => {});
+          }
+        }
+        showSecurityToast('Action blocked: Lecture material is view-only.');
+        return false;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        scrollToPage(Math.min(state.totalPages, state.currentPage + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        scrollToPage(Math.max(1, state.currentPage - 1));
+      }
+    }, true);
+
+    function activatePrivacyShield() {
+      els.appShell.classList.add('blurred');
+      els.privacyShield.classList.add('active');
+    }
+
+    function deactivatePrivacyShield() {
+      els.appShell.classList.remove('blurred');
+      els.privacyShield.classList.remove('active');
+    }
+
+    window.addEventListener('blur', activatePrivacyShield);
+    window.addEventListener('focus', deactivatePrivacyShield);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) activatePrivacyShield();
+      else deactivatePrivacyShield();
+    });
+
+    // XOR Unscramble in memory (automatically passes through plain %PDF- files too)
+    function unscrambleBuffer(arrayBuffer) {
+      const bytes = new Uint8Array(arrayBuffer);
+      if (
+        bytes.length >= 5 &&
+        bytes[0] === 0x25 &&
+        bytes[1] === 0x50 &&
+        bytes[2] === 0x44 &&
+        bytes[3] === 0x46 &&
+        bytes[4] === 0x2d
+      ) {
+        return bytes;
+      }
+      const keyBytes = new TextEncoder().encode(SCRAMBLE_KEY);
+      const out = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) {
+        out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    async function loadManifest() {
+      els.stage.innerHTML = `
+        <div class="state-box">
+          <div class="spinner"></div>
+          <h3>Loading Course Notes...</h3>
+          <p>Syncing chapters from the server.</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`./lessons.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        state.manifest = data;
+
+        if (data.courseTitle) {
+          els.courseTitle.textContent = data.courseTitle;
+          document.title = data.courseTitle;
+        }
+
+        const modules = Array.isArray(data.modules) ? data.modules : [];
+        renderSidebar(modules);
+
+        if (modules.length === 0) {
+          els.activeChapterSub.textContent = 'No chapters published yet';
+          els.pageIndicator.textContent = '0 / 0';
+          els.prevPageBtn.disabled = true;
+          els.nextPageBtn.disabled = true;
+          els.stage.innerHTML = `
+            <div class="state-box">
+              <h3>No lecture modules published yet</h3>
+              <p>Please check back later once your instructor uploads the notes.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const stillExists = state.activeModule && modules.find((m) => m.id === state.activeModule.id);
+        await selectModule(stillExists || modules[0]);
+      } catch (err) {
+        els.stage.innerHTML = `
+          <div class="state-box">
+            <h3>Unable to load course list</h3>
+            <p>Please check your internet connection and click Refresh.</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderSidebar(modules) {
+      els.moduleList.innerHTML = '';
+      modules.forEach((mod, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'module-item' + (state.activeModule && state.activeModule.id === mod.id ? ' active' : '');
+        btn.innerHTML = `
+          <span class="module-num">${String(idx + 1).padStart(2, '0')}</span>
+          <div class="module-meta">
+            <div class="module-name">${escapeHtml(mod.title)}</div>
+            <div class="module-pages">${mod.pageCount ? `${mod.pageCount} pages` : 'Lecture PDF'}</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          els.sidebar.classList.remove('open');
+          selectModule(mod);
+        });
+        els.moduleList.appendChild(btn);
+      });
+    }
+
+    async function selectModule(mod) {
+      state.activeModule = mod;
+      els.activeChapterSub.textContent = mod.title;
+      renderSidebar(state.manifest.modules || []);
+
+      els.stage.innerHTML = `
+        <div class="state-box">
+          <div class="spinner"></div>
+          <h3>Opening "${escapeHtml(mod.title)}"</h3>
+          <p>Preparing protected lecture pages...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`./${mod.filePath}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('File not found');
+        const rawBuffer = await res.arrayBuffer();
+        const pdfBytes = unscrambleBuffer(rawBuffer);
+
+        const loadingTask = pdfjsLib.getDocument({ data: pdfBytes });
+        state.pdfDoc = await loadingTask.promise;
+        state.totalPages = state.pdfDoc.numPages;
+        state.currentPage = 1;
+
+        updatePageControls();
+        await renderAllPages();
+      } catch (err) {
+        els.stage.innerHTML = `
+          <div class="state-box">
+            <h3>Could not open chapter</h3>
+            <p>The lecture file could not be loaded. Try clicking Refresh.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function renderAllPages() {
+      if (!state.pdfDoc) return;
+      const myToken = ++state.renderToken;
+      els.stage.innerHTML = '';
+
+      const stageWidth = Math.max(300, els.stage.clientWidth - 40);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      const showWatermark = state.manifest && state.manifest.showWatermark !== false;
+      const wmText = (state.manifest && state.manifest.watermarkText) || 'PROTECTED LECTURE • DO NOT COPY';
+
+      for (let pageNum = 1; pageNum <= state.totalPages; pageNum++) {
+        if (myToken !== state.renderToken) return;
+
+        const page = await state.pdfDoc.getPage(pageNum);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+
+        let scale = 1.0;
+        if (state.zoomMode === 'fit') {
+          scale = Math.min(1.65, stageWidth / unscaledViewport.width);
+        } else {
+          scale = parseFloat(state.zoomMode) || 1.0;
+        }
+
+        const viewport = page.getViewport({ scale });
+        const wrapper = document.createElement('div');
+        wrapper.className = 'canvas-wrapper';
+        wrapper.dataset.page = String(pageNum);
+        wrapper.style.width = `${Math.floor(viewport.width)}px`;
+        wrapper.style.height = `${Math.floor(viewport.height)}px`;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const ctx = canvas.getContext('2d', { alpha: false });
+        ctx.scale(dpr, dpr);
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        if (showWatermark && wmText.trim()) {
+          ctx.save();
+          ctx.translate(viewport.width / 2, viewport.height / 2);
+          ctx.rotate((-28 * Math.PI) / 180);
+          ctx.font = '600 15px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.08)';
+          ctx.textAlign = 'center';
+          for (let y = -viewport.height; y < viewport.height; y += 190) {
+            ctx.fillText(wmText, 0, y);
+          }
+          ctx.restore();
+        }
+
+        const tag = document.createElement('div');
+        tag.className = 'page-tag';
+        tag.textContent = `Page ${pageNum} of ${state.totalPages}`;
+
+        wrapper.appendChild(canvas);
+        wrapper.appendChild(tag);
+        els.stage.appendChild(wrapper);
+      }
+    }
+
+    function updatePageControls() {
+      els.pageIndicator.textContent = `${state.currentPage} / ${state.totalPages}`;
+      els.prevPageBtn.disabled = state.currentPage <= 1;
+      els.nextPageBtn.disabled = state.currentPage >= state.totalPages;
+    }
+
+    function scrollToPage(targetPage) {
+      if (!state.pdfDoc || targetPage < 1 || targetPage > state.totalPages) return;
+      state.currentPage = targetPage;
+      updatePageControls();
+      const targetEl = els.stage.querySelector(`.canvas-wrapper[data-page="${targetPage}"]`);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    els.stage.addEventListener('scroll', () => {
+      const wrappers = els.stage.querySelectorAll('.canvas-wrapper');
+      if (!wrappers.length) return;
+      const stageTop = els.stage.getBoundingClientRect().top;
+      let closestPage = 1;
+      let minDist = Infinity;
+      wrappers.forEach((w) => {
+        const dist = Math.abs(w.getBoundingClientRect().top - stageTop - 24);
+        if (dist < minDist) {
+          minDist = dist;
+          closestPage = parseInt(w.dataset.page, 10);
+        }
+      });
+      if (closestPage !== state.currentPage) {
+        state.currentPage = closestPage;
+        updatePageControls();
+      }
+    });
+
+    els.prevPageBtn.addEventListener('click', () => scrollToPage(state.currentPage - 1));
+    els.nextPageBtn.addEventListener('click', () => scrollToPage(state.currentPage + 1));
+
+    els.zoomSelect.addEventListener('change', (e) => {
+      state.zoomMode = e.target.value;
+      renderAllPages();
+    });
+
+    els.menuToggle.addEventListener('click', () => {
+      els.sidebar.classList.toggle('open');
+    });
+
+    els.refreshBtn.addEventListener('click', () => loadManifest());
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (state.zoomMode !== 'fit' || !state.pdfDoc) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => renderAllPages(), 220);
+    });
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    loadManifest();
+  </script>
+</body>
+</html>

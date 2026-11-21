@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C-LectureVault — Teacher Publisher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --header: #0f172a;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--header);
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .status-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+
+    .status-pill.connected {
+      background: rgba(22, 163, 74, 0.18);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #86efac;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 16px 60px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .card-desc {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: #f8fafc;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #e2e8f0;
+    }
+
+    .btn-danger {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: var(--danger);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 26px 18px;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: #eff6ff;
+    }
+
+    .dropzone strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .dropzone span {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    /* Chapter Table */
+    .chapter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chapter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      flex-wrap: wrap;
+    }
+
+    .chapter-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+      flex: 1;
+    }
+
+    .chapter-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .chapter-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .chapter-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .chapter-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Alert Banner */
+    .banner {
+      padding: 11px 14px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .banner.show {
+      display: block;
+    }
+
+    .banner.info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+
+    .banner.success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    .banner.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-badge">C</div>
+      <div>
+        <h1>C-LectureVault — Teacher Publisher</h1>
+        <p>Scramble &amp; publish PDFs directly to your GitHub repository</p>
+      </div>
+    </div>
+    <div id="connStatus" class="status-pill">Not Connected</div>
+  </header>
+
+  <main class="container">
+    <div id="statusBanner" class="banner"></div>
+
+    <!-- Step 1: GitHub Connection -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">1. GitHub Repository Connection</h2>
+          <p class="card-desc">Saved only inside this browser on your computer. Never uploaded anywhere.</p>
+        </div>
+        <button id="connectBtn" class="btn btn-primary">Connect &amp; Load Chapters</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="ghOwner">GitHub Username</label>
+          <input id="ghOwner" type="text" placeholder="e.g. your-github-username" />
+        </div>
+        <div class="field">
+          <label for="ghRepo">Repository Name</label>
+          <input id="ghRepo" type="text" placeholder="e.g. c-programming-notes" />
+        </div>
+        <div class="field">
+          <label for="ghBranch">Branch</label>
+          <input id="ghBranch" type="text" value="main" placeholder="main" />
+        </div>
+        <div class="field">
+          <label for="ghToken">GitHub Personal Access Token</label>
+          <input id="ghToken" type="password" placeholder="github_pat_..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Upload New Chapter -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">2. Upload New C Programming PDF</h2>
+          <p class="card-desc">Automatically scrambles the PDF bytes so raw GitHub links cannot be opened directly.</p>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 14px;">
+        <label for="chapterTitleInput">Chapter / Unit Title (Shown to Students)</label>
+        <input id="chapterTitleInput" type="text" placeholder="e.g. Unit 1: Introduction to C & Data Types" />
+      </div>
+
+      <div id="dropzone" class="dropzone">
+        <strong id="selectedFileLabel">Click to choose a PDF file or drag &amp; drop it here</strong>
+        <span>Maximum recommended file size: 45 MB</span>
+        <input id="pdfFileInput" type="file" accept="application/pdf" hidden />
+      </div>
+
+      <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+        <button id="uploadBtn" class="btn btn-primary" disabled>Scramble &amp; Publish to GitHub</button>
+      </div>
+    </section>
+
+    <!-- Step 3: Manage Published Chapters -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">3. Published Chapters (<span id="chapterCount">0</span>)</h2>
+          <p class="card-desc">Replace a PDF, reorder units, or delete chapters permanently from GitHub.</p>
+        </div>
+        <button id="reloadChaptersBtn" class="btn btn-secondary btn-sm">Sync from GitHub</button>
+      </div>
+
+      <div id="chapterList" class="chapter-list">
+        <p style="color: var(--muted); font-size: 13.5px; margin: 6px 0;">Connect your GitHub repository above to view and manage chapters.</p>
+      </div>
+      <input id="replaceFileInput" type="file" accept="application/pdf" hidden />
+    </section>
+
+    <!-- Step 4: Course Display Settings -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">4. Portal Title &amp; Watermark Settings</h2>
+          <p class="card-desc">Customize the header and background watermark text shown on the student viewer.</p>
+        </div>
+        <button id="saveSettingsBtn" class="btn btn-secondary">Save Settings to GitHub</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="courseTitleInput">Course Header Title</label>
+          <input id="courseTitleInput" type="text" value="C Programming Language" />
+        </div>
+        <div class="field">
+          <label for="watermarkTextInput">Background Watermark Text</label>
+          <input id="watermarkTextInput" type="text" value="PROTECTED LECTURE • DO NOT DISTRIBUTE" />
+        </div>
+      </div>
+
+      <label class="toggle-row">
+        <input id="showWatermarkCheck" type="checkbox" checked />
+        <span>Show subtle diagonal watermark across lecture pages</span>
+      </label>
+    </section>
+  </main>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const SCRAMBLE_KEY = 'C_LECTURE_VAULT_2026_KEY';
+    const STORAGE_KEY = 'clv_github_config_v1';
+
+    let pendingFile = null;
+    let replaceTargetId = null;
+    let currentManifest = {
+      courseTitle: 'C Programming Language',
+      showWatermark: true,
+      watermarkText: 'PROTECTED LECTURE • DO NOT DISTRIBUTE',
+      modules: []
+    };
+    let manifestSha = null;
+
+    const els = {
+      connStatus: document.getElementById('connStatus'),
+      statusBanner: document.getElementById('statusBanner'),
+      ghOwner: document.getElementById('ghOwner'),
+      ghRepo: document.getElementById('ghRepo'),
+      ghBranch: document.getElementById('ghBranch'),
+      ghToken: document.getElementById('ghToken'),
+      connectBtn: document.getElementById('connectBtn'),
+      chapterTitleInput: document.getElementById('chapterTitleInput'),
+      dropzone: document.getElementById('dropzone'),
+      selectedFileLabel: document.getElementById('selectedFileLabel'),
+      pdfFileInput: document.getElementById('pdfFileInput'),
+      uploadBtn: document.getElementById('uploadBtn'),
+      chapterCount: document.getElementById('chapterCount'),
+      chapterList: document.getElementById('chapterList'),
+      reloadChaptersBtn: document.getElementById('reloadChaptersBtn'),
+      replaceFileInput: document.getElementById('replaceFileInput'),
+      courseTitleInput: document.getElementById('courseTitleInput'),
+      watermarkTextInput: document.getElementById('watermarkTextInput'),
+      showWatermarkCheck: document.getElementById('showWatermarkCheck'),
+      saveSettingsBtn: document.getElementById('saveSettingsBtn')
+    };
+
+    function showBanner(type, message) {
+      els.statusBanner.className = `banner show ${type}`;
+      els.statusBanner.textContent = message;
+    }
+
+    function getConfig() {
+      return {
+        owner: els.ghOwner.value.trim(),
+        repo: els.ghRepo.value.trim(),
+        branch: els.ghBranch.value.trim() || 'main',
+        token: els.ghToken.value.trim()
+      };
+    }
+
+    function saveConfigLocally() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getConfig()));
+    }
+
+    function loadConfigLocally() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const cfg = JSON.parse(raw);
+        if (cfg.owner) els.ghOwner.value = cfg.owner;
+        if (cfg.repo) els.ghRepo.value = cfg.repo;
+        if (cfg.branch) els.ghBranch.value = cfg.branch;
+        if (cfg.token) els.ghToken.value = cfg.token;
+      } catch (e) {}
+    }
+
+    // XOR Scramble PDF bytes
+    function scrambleBuffer(arrayBuffer) {
+      const bytes = new Uint8Array(arrayBuffer);
+      const keyBytes = new TextEncoder().encode(SCRAMBLE_KEY);
+      const out = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) {
+        out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    // Safe chunked Base64 encoding for large binary files
+    function uint8ToBase64(bytes) {
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const sub = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, sub);
+      }
+      return btoa(binary);
+    }
+
+    function utf8ToBase64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    function base64ToUtf8(b64) {
+      return decodeURIComponent(escape(atob(b64.replace(/\n/g, ''))));
+    }
+
+    async function ghRequest(path, options = {}) {
+      const cfg = getConfig();
+      if (!cfg.owner || !cfg.repo || !cfg.token) {
+        throw new Error('Please fill in your GitHub Username, Repository Name, and Token first.');
+      }
+      const url = `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${path}`;
+      const res = await fetch(url, {
+        ...options,
+        cache: 'no-store',
+        headers: {
+          'Authorization': `Bearer ${cfg.token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (errJson.message) detail = errJson.message;
+        } catch (e) {}
+        throw new Error(`GitHub API Error: ${detail}`);
+      }
+      return res.json();
+    }
+
+    async function fetchManifestFromGitHub() {
+      const cfg = getConfig();
+      saveConfigLocally();
+      showBanner('info', 'Connecting to GitHub repository...');
+
+      try {
+        const data = await ghRequest(`lessons.json?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`);
+        manifestSha = data.sha;
+        const decoded = JSON.parse(base64ToUtf8(data.content));
+        currentManifest = {
+          courseTitle: decoded.courseTitle || 'C Programming Language',
+          showWatermark: decoded.showWatermark !== false,
+          watermarkText: decoded.watermarkText || 'PROTECTED LECTURE • DO NOT DISTRIBUTE',
+          modules: Array.isArray(decoded.modules) ? decoded.modules : []
+        };
+      } catch (err) {
+        if (err.message.includes('Not Found')) {
+          manifestSha = null;
+          currentManifest = {
+            courseTitle: 'C Programming Language',
+            showWatermark: true,
+            watermarkText: 'PROTECTED LECTURE • DO NOT DISTRIBUTE',
+            modules: []
+          };
+          await commitManifest('Initialize lessons.json');
+        } else {
+          els.connStatus.textContent = 'Connection Failed';
+          els.connStatus.classList.remove('connected');
+          showBanner('error', err.message);
+          return;
+        }
+      }
+
+      els.connStatus.textContent = `Connected: ${cfg.owner}/${cfg.repo}`;
+      els.connStatus.classList.add('connected');
+      els.courseTitleInput.value = currentManifest.courseTitle;
+      els.watermarkTextInput.value = currentManifest.watermarkText;
+      els.showWatermarkCheck.checked = currentManifest.showWatermark;
+      renderChapterList();
+      showBanner('success', `Connected to ${cfg.owner}/${cfg.repo} (${currentManifest.modules.length} chapters loaded).`);
+    }
+
+    async function commitManifest(commitMessage) {
+      const cfg = getConfig();
+      currentManifest.updatedAt = new Date().toISOString();
+      const body = {
+        message: commitMessage,
+        content: utf8ToBase64(JSON.stringify(currentManifest, null, 2)),
+        branch: cfg.branch
+      };
+      if (manifestSha) body.sha = manifestSha;
+
+      const res = await ghRequest('lessons.json', {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+      manifestSha = res.content.sha;
+    }
+
+    async function getPdfPageCount(arrayBuffer) {
+      const copy = arrayBuffer.slice(0);
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(copy) }).promise;
+      return pdf.numPages;
+    }
+
+    function slugify(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'lecture';
+    }
+
+    // File Selection & Drag-and-Drop
+    function handleSelectedFile(file) {
+      if (!file || file.type !== 'application/pdf') {
+        showBanner('error', 'Please select a valid .pdf file.');
+        return;
+      }
+      if (file.size > 48 * 1024 * 1024) {
+        showBanner('error', 'PDF is larger than 48 MB. Please compress it before uploading to GitHub.');
+        return;
+      }
+      pendingFile = file;
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      els.selectedFileLabel.textContent = `Selected: ${file.name} (${sizeMb} MB)`;
+      if (!els.chapterTitleInput.value.trim()) {
+        els.chapterTitleInput.value = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
+      }
+      els.uploadBtn.disabled = false;
+    }
+
+    els.dropzone.addEventListener('click', () => els.pdfFileInput.click());
+    els.pdfFileInput.addEventListener('change', (e) => handleSelectedFile(e.target.files[0]));
+    els.dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      els.dropzone.classList.add('dragover');
+    });
+    els.dropzone.addEventListener('dragleave', () => els.dropzone.classList.remove('dragover'));
+    els.dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      els.dropzone.classList.remove('dragover');
+      handleSelectedFile(e.dataTransfer.files[0]);
+    });
+
+    // Upload New Chapter
+    els.uploadBtn.addEventListener('click', async () => {
+      if (!pendingFile) return;
+      const title = els.chapterTitleInput.value.trim() || pendingFile.name.replace(/\.pdf$/i, '');
+      const cfg = getConfig();
+
+      els.uploadBtn.disabled = true;
+      showBanner('info', `Reading and scrambling "${pendingFile.name}"...`);
+
+      try {
+        if (!manifestSha) {
+          await fetchManifestFromGitHub();
+        }
+
+        const rawBuffer = await pendingFile.arrayBuffer();
+        const pageCount = await getPdfPageCount(rawBuffer);
+        const scrambledBytes = scrambleBuffer(rawBuffer);
+        const base64Data = uint8ToBase64(scrambledBytes);
+
+        const timestamp = Date.now();
+        const filePath = `pdfs/${slugify(title)}-${timestamp}.bin`;
+
+        showBanner('info', `Uploading "${title}" (${pageCount} pages) to GitHub...`);
+
+        await ghRequest(filePath, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: `Add chapter: ${title}`,
+            content: base64Data,
+            branch: cfg.branch
+          })
+        });
+
+        currentManifest.modules.push({
+          id: `mod-${timestamp}`,
+          title,
+          filePath,
+          originalName: pendingFile.name,
+          pageCount,
+          uploadedAt: new Date().toISOString()
+        });
+
+        await commitManifest(`Publish chapter: ${title}`);
+
+        pendingFile = null;
+        els.pdfFileInput.value = '';
+        els.chapterTitleInput.value = '';
+        els.selectedFileLabel.textContent = 'Click to choose a PDF file or drag & drop it here';
+        renderChapterList();
+        showBanner('success', `Published "${title}" (${pageCount} pages). Students will see it immediately.`);
+      } catch (err) {
+        showBanner('error', err.message);
+        els.uploadBtn.disabled = false;
+      }
+    });
+
+    // Replace Existing Chapter PDF
+    els.replaceFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      els.replaceFileInput.value = '';
+      if (!file || !replaceTargetId) return;
+
+      const mod = currentManifest.modules.find((m) => m.id === replaceTargetId);
+      replaceTargetId = null;
+      if (!mod) return;
+
+      const cfg = getConfig();
+      showBanner('info', `Replacing PDF for "${mod.title}"...`);
+
+      try {
+        const rawBuffer = await file.arrayBuffer();
+        const pageCount = await getPdfPageCount(rawBuffer);
+        const scrambledBytes = scrambleBuffer(rawBuffer);
+        const base64Data = uint8ToBase64(scrambledBytes);
+
+        let existingSha = null;
+        try {
+          const existing = await ghRequest(`${mod.filePath}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`);
+          existingSha = existing.sha;
+        } catch (err) {}
+
+        const putBody = {
+          message: `Replace PDF for: ${mod.title}`,
+          content: base64Data,
+          branch: cfg.branch
+        };
+        if (existingSha) putBody.sha = existingSha;
+
+        await ghRequest(mod.filePath, {
+          method: 'PUT',
+          body: JSON.stringify(putBody)
+        });
+
+        mod.pageCount = pageCount;
+        mod.originalName = file.name;
+        mod.uploadedAt = new Date().toISOString();
+
+        await commitManifest(`Update page count for: ${mod.title}`);
+        renderChapterList();
+        showBanner('success', `Updated "${mod.title}" with "${file.name}" (${pageCount} pages).`);
+      } catch (err) {
+        showBanner('error', err.message);
+      }
+    });
+
+    // Delete Chapter
+    async function deleteChapter(mod) {
+      const confirmed = window.confirm(`Delete "${mod.title}" permanently from GitHub?`);
+      if (!confirmed) return;
+
+      const cfg = getConfig();
+      showBanner('info', `Deleting "${mod.title}" from GitHub...`);
+
+      try {
+        try {
+          const fileMeta = await ghRequest(`${mod.filePath}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`);
+          await ghRequest(mod.filePath, {
+            method: 'DELETE',
+            body: JSON.stringify({
+              message: `Delete lecture file: ${mod.title}`,
+              sha: fileMeta.sha,
+              branch: cfg.branch
+            })
+          });
+        } catch (fileErr) {
+          if (!fileErr.message.includes('Not Found')) throw fileErr;
+        }
+
+        currentManifest.modules = currentManifest.modules.filter((m) => m.id !== mod.id);
+        await commitManifest(`Remove chapter: ${mod.title}`);
+        renderChapterList();
+        showBanner('success', `Deleted "${mod.title}".`);
+      } catch (err) {
+        showBanner('error', err.message);
+      }
+    }
+
+    // Reorder Chapters
+    async function moveChapter(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= currentManifest.modules.length) return;
+
+      const list = currentManifest.modules;
+      const [moved] = list.splice(index, 1);
+      list.splice(newIndex, 0, moved);
+
+      renderChapterList();
+      showBanner('info', 'Saving new chapter order to GitHub...');
+      try {
+        await commitManifest('Reorder course chapters');
+        showBanner('success', 'Chapter order updated.');
+      } catch (err) {
+        showBanner('error', err.message);
+      }
+    }
+
+    function renderChapterList() {
+      const modules = currentManifest.modules || [];
+      els.chapterCount.textContent = String(modules.length);
+
+      if (modules.length === 0) {
+        els.chapterList.innerHTML = `<p style="color: var(--muted); font-size: 13.5px; margin: 6px 0;">No chapters published yet. Upload your first C programming PDF above.</p>`;
+        return;
+      }
+
+      els.chapterList.innerHTML = '';
+      modules.forEach((mod, idx) => {
+        const row = document.createElement('div');
+        row.className = 'chapter-row';
+
+        row.innerHTML = `
+          <div class="chapter-info">
+            <span class="chapter-idx">#${String(idx + 1).padStart(2, '0')}</span>
+            <div>
+              <div class="chapter-title">${escapeHtml(mod.title)}</div>
+              <div class="chapter-sub">${escapeHtml(mod.filePath)} • ${mod.pageCount || '?'} pages</div>
+            </div>
+          </div>
+          <div class="chapter-actions">
+            <button class="btn btn-secondary btn-sm" data-action="up" ${idx === 0 ? 'disabled' : ''}>Up</button>
+            <button class="btn btn-secondary btn-sm" data-action="down" ${idx === modules.length - 1 ? 'disabled' : ''}>Down</button>
+            <button class="btn btn-secondary btn-sm" data-action="replace">Replace PDF</button>
+            <button class="btn btn-danger btn-sm" data-action="delete">Delete</button>
+          </div>
+        `;
+
+        row.querySelector('[data-action="up"]').addEventListener('click', () => moveChapter(idx, -1));
+        row.querySelector('[data-action="down"]').addEventListener('click', () => moveChapter(idx, 1));
+        row.querySelector('[data-action="replace"]').addEventListener('click', () => {
+          replaceTargetId = mod.id;
+          els.replaceFileInput.click();
+        });
+        row.querySelector('[data-action="delete"]').addEventListener('click', () => deleteChapter(mod));
+
+        els.chapterList.appendChild(row);
+      });
+    }
+
+    // Save Portal Settings
+    els.saveSettingsBtn.addEventListener('click', async () => {
+      currentManifest.courseTitle = els.courseTitleInput.value.trim() || 'C Programming Language';
+      currentManifest.watermarkText = els.watermarkTextInput.value.trim();
+      currentManifest.showWatermark = els.showWatermarkCheck.checked;
+
+      showBanner('info', 'Saving portal settings to GitHub...');
+      try {
+        if (!manifestSha) await fetchManifestFromGitHub();
+        await commitManifest('Update portal title and watermark settings');
+        showBanner('success', 'Portal settings saved.');
+      } catch (err) {
+        showBanner('error', err.message);
+      }
+    });
+
+    els.connectBtn.addEventListener('click', fetchManifestFromGitHub);
+    els.reloadChaptersBtn.addEventListener('click', fetchManifestFromGitHub);
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    loadConfigLocally();
+    if (els.ghOwner.value && els.ghRepo.value && els.ghToken.value) {
+      fetchManifestFromGitHub();
+    }
+  </script>
+</body>
+</html>
