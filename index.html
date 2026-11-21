@@ -842,12 +842,15 @@
     }
 
     function poisonClipboard() {
+      const msg = 'Protected Lecture Material - Screenshots Disabled';
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText('Protected Lecture Material - Screenshots Disabled').catch(() => {});
+        navigator.clipboard.writeText(msg).catch(() => {});
+        setTimeout(() => navigator.clipboard.writeText(msg).catch(() => {}), 150);
+        setTimeout(() => navigator.clipboard.writeText(msg).catch(() => {}), 450);
       }
     }
 
-    // Intercept PrintScreen on BOTH keydown and keyup + Win+Shift+S / Cmd+Shift / DevTools
+    // Intercept PrintScreen + Windows/Meta key + Ctrl+Shift / Cmd+Shift / DevTools
     function handleSecurityKey(e) {
       const key = (e.key || '').toLowerCase();
       const code = (e.code || '').toLowerCase();
@@ -858,15 +861,21 @@
         code === 'printscreen' ||
         e.keyCode === 44;
 
-      const isSnipCombo =
-        (e.metaKey && e.shiftKey) ||
-        (ctrlOrMeta && e.shiftKey && ['s', 'i', 'j', 'c', '3', '4', '5'].includes(key));
+      const isModifierCaptureStart =
+        key === 'meta' ||
+        key === 'os' ||
+        code === 'metaleft' ||
+        code === 'metaright' ||
+        code === 'osleft' ||
+        code === 'osright' ||
+        e.metaKey ||
+        (e.ctrlKey && e.shiftKey);
 
       const isBlockedShortcut =
         e.key === 'F12' ||
         (ctrlOrMeta && ['u', 's', 'p', 'c', 'a', 'x'].includes(key));
 
-      if (isPrintScreen || isSnipCombo || isBlockedShortcut) {
+      if (isPrintScreen || isModifierCaptureStart || isBlockedShortcut) {
         e.preventDefault();
         e.stopPropagation();
         lockScreen();
@@ -898,12 +907,19 @@
       }
     }, { passive: false, capture: true });
 
-    // Lock immediately when window loses focus, notification shade opens, tab hides, or pointer exits
+    // Lock immediately when window loses focus, snipping overlay opens, tab hides, or pointer exits
     window.addEventListener('blur', lockScreen);
+    document.addEventListener('focusout', lockScreen);
     window.addEventListener('pagehide', lockScreen);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) lockScreen();
     });
+
+    setInterval(() => {
+      if (!state.isLocked && (document.hidden || !document.hasFocus())) {
+        lockScreen();
+      }
+    }, 80);
 
     if (window.matchMedia('(hover: hover)').matches) {
       document.addEventListener('mouseleave', lockScreen);
@@ -1091,11 +1107,11 @@
           ctx.save();
           ctx.translate(cssWidth / 2, cssHeight / 2);
           ctx.rotate((-28 * Math.PI) / 180);
-          ctx.font = '700 15px "JetBrains Mono", monospace';
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+          ctx.font = '700 14px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
           ctx.textAlign = 'center';
-          for (let y = -cssHeight; y < cssHeight; y += 160) {
-            ctx.fillText(wmText, 0, y);
+          for (let y = -cssHeight; y < cssHeight; y += 115) {
+            ctx.fillText(`${wmText}   •   ${wmText}`, 0, y);
           }
           ctx.restore();
         }
