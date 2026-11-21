@@ -4,21 +4,21 @@
   "watermarkText": "PROTECTED LECTURE • DO NOT DISTRIBUTE",
   "modules": [
     {
-      "id": "mod-1795240846455",
-      "title": "DAAD 3.2 IF ELSE(PART 2)",
-      "filePath": "pdfs/daad-3-2-if-else-part-2-1795240846455.bin",
-      "originalName": "DAAD-3.2-IF-ELSE(PART-2).pdf",
-      "pageCount": 1,
-      "uploadedAt": "2026-11-21T06:00:48.168Z"
-    },
-    {
       "id": "mod-1795242208441",
       "title": "DAAD 3 IF ELSE SWITCH CASE",
       "filePath": "pdfs/daad-3-if-else-switch-case-1795242208441.bin",
       "originalName": "DAAD-3-IF-ELSE-SWITCH-CASE.pdf",
       "pageCount": 1,
       "uploadedAt": "2026-11-21T06:23:30.271Z"
+    },
+    {
+      "id": "mod-1795240846455",
+      "title": "DAAD 3.2 IF ELSE(PART 2)",
+      "filePath": "pdfs/daad-3-2-if-else-part-2-1795240846455.bin",
+      "originalName": "DAAD-3.2-IF-ELSE(PART-2).pdf",
+      "pageCount": 1,
+      "uploadedAt": "2026-11-21T06:00:48.168Z"
     }
   ],
-  "updatedAt": "2026-11-21T06:23:30.271Z"
+  "updatedAt": "2026-11-21T06:41:10.774Z"
 }
